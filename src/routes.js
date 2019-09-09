@@ -13,7 +13,7 @@ routes.get("/task", async (req, res)=>{
     if(lisTask){
         res.status(200).send({lisTask: lisTask, state: true, error: false});
     }else{
-        res.status(400).send({message:"There is not any task.", state: false, error: false});
+        res.status(400).send({message:"There is not any task.", state: false, error: false, lisTask: {}});
     }
 
 });
