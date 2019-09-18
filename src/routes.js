@@ -88,22 +88,30 @@ routes.post("/user", async (req, res) => {
 
 });
 
-routes.put("/user/:_id", (req, res) => {
+routes.put("/user/:_id", async (req, res) => {
 
-    User.findByIdAndUpdate({ _id: req.params._id }, req.body, (error, doc) => {
-        if (error) {
-            res.status(500).send({ message: "Error to try updating the User.", state: false, error: true });
-        } else {
-            if (doc) {
-                res.status(200).send({ message: "User updated successfully", state: true, error: false });
+    const user = await User.findOne({email: req.body['email']});
+
+    if(user){
+        res.status(200).send({ message: "The user already exist!", state: false, error: false });
+    }else{
+        User.findByIdAndUpdate({ _id: req.params._id }, req.body, (error, doc) => {
+            if (error) {
+                res.status(500).send({ message: "Error to try updating the User.", state: false, error: true });
             } else {
-                res.status(400).send({ message: "There is not any user with that id.", state: false, error: false });
+                if (doc) {
+                    res.status(200).send({ message: "User updated successfully", state: true, error: false });
+                } else {
+                    res.status(400).send({ message: "There is not any user with that id.", state: false, error: false });
+                }
             }
-        }
-    })
+        });
+    }
+
+    
 });
 
-routes.delete("/user/:_id", async (req, res) => {
+routes.delete("/user/:_id", async (req, res) => {       
 
     const user = await User.findOne({ _id: req.params._id });
     if (user) {
