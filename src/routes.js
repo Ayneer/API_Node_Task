@@ -19,9 +19,8 @@ routes.get("/task", async (req, res) => {
 
 });
 
-routes.put("/task/:_id", (req, res) => {
-
-    Task.findByIdAndUpdate({ _id: req.params._id }, req.body, (error, doc) => {
+function updateTask(body, res, id){
+    Task.findByIdAndUpdate({ _id: id }, body, (error, doc) => {
         if (error) {
             res.status(500).send({ message: "Error to try updating the task.", state: false, error: true });
         } else {
@@ -31,7 +30,12 @@ routes.put("/task/:_id", (req, res) => {
                 res.status(400).send({ message: "There is not any task with that id.", state: false, error: false });
             }
         }
-    })
+    });
+}
+
+routes.put("/task/:_id", (req, res) => {
+    const id = req.params._id;
+    updateTask(req.body, res, id);
 });
 
 routes.post("/task", (req, res) => {
@@ -70,7 +74,7 @@ routes.post("/user", async (req, res) => {
     body = req.body;
 
     const user = await User.findOne({ email: body.email });
-    console.log(user);
+
     if (!user) {
         const newUser = new User();
         newUser.name = body.name;
@@ -88,30 +92,52 @@ routes.post("/user", async (req, res) => {
 
 });
 
+async function updateUser(req, res){
+    User.findByIdAndUpdate({ _id: req.params._id }, req.body, (error, doc) => {
+        if (error) {
+            return res.status(500).send({ message: "Error to try updating the User.", state: false, error: true });
+        } else {
+            if (doc) {
+
+                // const task = await Task.findOne({user: req.body['email']});
+
+                // if(task){
+                //     task.user = 
+                //     updateTask(task, res, task._id)
+                // }
+
+                return res.status(200).send({ message: "User updated successfully", state: true, error: false });
+            }
+        }
+    });
+}
+
 routes.put("/user/:_id", async (req, res) => {
 
-    const user = await User.findOne({email: req.body['email']});
+    const user = await User.findById({ _id: req.params._id });
 
-    if(user){
-        res.status(200).send({ message: "The user already exist!", state: false, error: false });
-    }else{
-        User.findByIdAndUpdate({ _id: req.params._id }, req.body, (error, doc) => {
-            if (error) {
-                res.status(500).send({ message: "Error to try updating the User.", state: false, error: true });
-            } else {
-                if (doc) {
-                    res.status(200).send({ message: "User updated successfully", state: true, error: false });
-                } else {
-                    res.status(400).send({ message: "There is not any user with that id.", state: false, error: false });
-                }
-            }
-        });
+    if (user) {
+
+        if (user.email !== req.body['email']) {
+
+            const userEmail = await User.findOne({ email: req.body['email'] });
+
+            if (userEmail) {
+                return res.status(200).send({ message: "The user already exist!", state: false, error: false });
+            }else{
+                updateUser(req, body);
+            } 
+        }else{
+            updateUser(req, body); 
+        }
+    } else {
+        res.status(400).send({ message: "There is not any user with that id.", state: false, error: false });
     }
 
-    
+
 });
 
-routes.delete("/user/:_id", async (req, res) => {       
+routes.delete("/user/:_id", async (req, res) => {
 
     const user = await User.findOne({ _id: req.params._id });
     if (user) {
@@ -124,11 +150,10 @@ routes.delete("/user/:_id", async (req, res) => {
                     res.status(200).send({ message: "User deleted successfully", state: true, error: false });
                 }
             })
-        }else{
-            console.log(task);
+        } else {
             res.status(400).send({ message: "There is a task with this user, delete it or remove the task's user", state: false, error: false });
         }
-    }else{
+    } else {
         res.status(400).send({ message: "There is not any user with that id.", state: false, error: false });
     }
 
